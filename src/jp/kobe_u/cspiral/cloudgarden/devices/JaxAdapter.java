@@ -9,6 +9,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+
 @Path("/api")
 public class JaxAdapter {
 
@@ -20,10 +23,11 @@ public class JaxAdapter {
 	public Response start() {
 		try {
 			//TODO: ec2上のwebsocketサーバのアドレスに書き換える
-			wsc = new WebSocketClientExample(new URI("ws://localhost:8080/tinychat_with_jaxrs/api/ws"));
+			wsc = new WebSocketClientExample(new URI("ws://54.199.139.148/cloud_garden_server/api/ws"));
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
+		System.out.println("new wsc: " + wsc);
 		return Response.status(200).entity("<return>success</return>").build();
 	}
 
@@ -36,5 +40,57 @@ public class JaxAdapter {
 		return Response.status(200).entity("<return>success</return>").build();
 	}
 
+	@GET
+	@Produces({MediaType.APPLICATION_XML})
+	@Path("/tmpsendTandH")
+	public Response sendTandH() {
+		System.out.println("in /tmpsendTandH");
+		String message = DevicesController.getTemperatureAndHumidity();
+		//wsc.sendMessage(message);
+		RestClient client = new RestClient("superuser", "superuser");
+
+		String uri = "http://54.199.139.148/cloud_garden_server/api/submitTemperatureAndH";
+		client.post(uri, message, String.class, MediaType.APPLICATION_JSON_TYPE);
+
+		return Response.status(200).entity("<return>"+ message +"</return>").build();
+	}
+
+	@GET
+	@Produces({MediaType.APPLICATION_XML})
+	@Path("/tmpsendImage")
+	public Response sendImage() {
+		System.out.println("in /tmpsendImage");
+		String message = DevicesController.getImage();
+		//wsc.sendMessage(message);
+		RestClient client = new RestClient("superuser", "superuser");
+
+		String uri = "http://54.199.139.148/cloud_garden_server/api/submitImage";
+		client.post(uri, message, String.class, MediaType.APPLICATION_JSON_TYPE);
+
+		return Response.status(200).entity("<return>"+ message +"</return>").build();
+	}
+
+	@GET
+	@Produces({MediaType.APPLICATION_XML})
+	@Path("/updateState")
+	public Response updateState() {
+		System.out.println("in /updateState");
+		Client c = Client.create();
+
+		//接続するアドレス
+        WebResource resource = c.resource(
+                "http://54.199.139.148/cloud_garden_server/api/updateState"
+                );
+		String jsonText = DevicesController.getState();
+        String response = resource.type(MediaType.APPLICATION_JSON_TYPE).
+                post(String.class, jsonText);
+        System.out.println("----------------------------");
+        System.out.println("★パラメータ");
+        System.out.println(jsonText);
+        System.out.println("★結果");
+        System.out.println(response);
+
+		return Response.status(200).entity("<return>"+ jsonText +"</return>").build();
+	}
 
 }

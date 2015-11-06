@@ -29,11 +29,14 @@ public class WebSocketClientExample {
 
 	@OnOpen
 	public void onOpen(Session userSession) {
+		System.out.println("in @OnOpen");
 		this.userSession = userSession;
 	}
 
 	@OnMessage
 	public void onMessage(String message) {
+		System.out.println("in @OnMessage");
+		System.out.println("message is " + message);
 		String method = null;
 		try {
 			JSONObject jsonObj = new JSONObject(message);
@@ -41,16 +44,27 @@ public class WebSocketClientExample {
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
+
+		if(method == null){
+			System.out.println("method is null.");
+			return;
+		}
+
 		switch (method) {
 		case "getTemperatureAndHumidity":
+			System.out.println("get request of temperature and humidty");
+			System.out.println(message);
 			sendMessage(DevicesController.getTemperatureAndHumidity());
 			break;
 
 		case "getImage":
+			System.out.println("get request of image");
+			System.out.println(message);
 			sendMessage(DevicesController.getImage());
 			break;
 
 		default:
+			System.out.println(message);
 			break;
 		}
 	}
@@ -61,6 +75,7 @@ public class WebSocketClientExample {
 
 	public void close() {
 		//todo: serverでclose処理が必要
+		sendMessage("{\"request\": \"close\"}");
 		this.userSession = null;
 	}
 
